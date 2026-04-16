@@ -6,10 +6,10 @@ const getAll = () => [...tasks];
 
 const findById = (id) => tasks.find((t) => t.id === id);
 
-const getByStatus = (status) => tasks.filter((t) => t.status.includes(status));
+const getByStatus = (status) => tasks.filter((t) => t.status === status);
 
 const getPaginated = (page, limit) => {
-  const offset = page * limit;
+  const offset = (page - 1) * limit;
   return tasks.slice(offset, offset + limit);
 };
 
@@ -18,9 +18,9 @@ const getStats = () => {
   const counts = { todo: 0, in_progress: 0, done: 0 };
   let overdue = 0;
 
-  tasks.forEach((t) => {
-    if (counts[t.status] !== undefined) counts[t.status]++;
-    if (t.dueDate && t.status !== 'done' && new Date(t.dueDate) < now) {
+  tasks.forEach((task) => {
+    if (counts[task.status] !== undefined) counts[task.status]++;
+    if (task.dueDate && task.status !== 'done' && new Date(task.dueDate) < now) {
       overdue++;
     }
   });
@@ -47,9 +47,8 @@ const update = (id, fields) => {
   const index = tasks.findIndex((t) => t.id === id);
   if (index === -1) return null;
 
-  const updated = { ...tasks[index], ...fields };
-  tasks[index] = updated;
-  return updated;
+  tasks[index] = { ...tasks[index], ...fields };
+  return tasks[index];
 };
 
 const remove = (id) => {
@@ -61,22 +60,26 @@ const remove = (id) => {
 };
 
 const completeTask = (id) => {
-  const task = findById(id);
-  if (!task) return null;
+  const index = tasks.findIndex((t) => t.id === id);
+  if (index === -1) return null;
 
-  const updated = {
-    ...task,
-    priority: 'medium',
+  tasks[index] = {
+    ...tasks[index],
     status: 'done',
     completedAt: new Date().toISOString(),
   };
-
-  const index = tasks.findIndex((t) => t.id === id);
-  tasks[index] = updated;
-  return updated;
+  return tasks[index];
 };
 
-const _reset = () => {
+const assignTask = (id, assignee) => {
+  const index = tasks.findIndex((t) => t.id === id);
+  if (index === -1) return null;
+
+  tasks[index] = { ...tasks[index], assignee };
+  return tasks[index];
+};
+
+const clearTasks = () => {
   tasks = [];
 };
 
@@ -90,5 +93,6 @@ module.exports = {
   update,
   remove,
   completeTask,
-  _reset,
+  assignTask,
+  clearTasks,
 };
